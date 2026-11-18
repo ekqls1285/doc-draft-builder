@@ -62,6 +62,11 @@ def index():
     return render_template("index.html")
 
 
+@app.route("/favicon.ico", methods=["GET"])
+def favicon():
+    return ("", 204)
+
+
 @app.route("/generate", methods=["POST"])
 def generate():
     data = request.get_json(silent=True) or {}

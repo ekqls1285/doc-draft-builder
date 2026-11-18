@@ -17,11 +17,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const draftEditor = document.getElementById("draft-editor");
 
   const generateBtn = document.getElementById("generate-btn");
+  const saveFactsBtn = document.getElementById("save-facts-btn");
+  const loadFactsBtn = document.getElementById("load-facts-btn");
   const fillExampleBtn = document.getElementById("fill-example-btn");
   const toggleEditBtn = document.getElementById("toggle-edit-btn");
   const copyBtn = document.getElementById("copy-btn");
   const downloadBtn = document.getElementById("download-btn");
 
+  const FACTS_STORAGE_KEY = "doc_draft_facts_card";
   const EMPTY_PREVIEW_TEXT =
     "왼쪽에서 문서 정보를 입력하고 [초안 생성] 버튼을 누르면 여기에 초안이 나타납니다.";
   let currentDraftMarkdown = "";
@@ -169,6 +172,55 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  function saveFactsToStorage() {
+    const facts = {
+      when: whenInput.value,
+      where: whereInput.value,
+      who: whoInput.value,
+      how: howInput.value,
+      contact: contactInput.value,
+    };
+    try {
+      localStorage.setItem(FACTS_STORAGE_KEY, JSON.stringify(facts));
+    } catch (_err) {
+      // 브라우저 저장소가 비활성화된 경우 조용히 무시합니다.
+    }
+  }
+
+  for (const input of [whenInput, whereInput, whoInput, howInput, contactInput]) {
+    input.addEventListener("input", saveFactsToStorage);
+  }
+
+  saveFactsBtn.addEventListener("click", () => {
+    clearError();
+    clearStatus();
+    saveFactsToStorage();
+    showStatus("사실 카드가 브라우저에 저장되었습니다.");
+  });
+
+  loadFactsBtn.addEventListener("click", () => {
+    clearError();
+    clearStatus();
+
+    try {
+      const raw = localStorage.getItem(FACTS_STORAGE_KEY);
+      if (!raw) {
+        showError("저장된 사실 카드가 아직 없습니다.");
+        return;
+      }
+
+      const facts = JSON.parse(raw);
+      whenInput.value = facts.when || "";
+      whereInput.value = facts.where || "";
+      whoInput.value = facts.who || "";
+      howInput.value = facts.how || "";
+      contactInput.value = facts.contact || "";
+      showStatus("저장된 사실 카드를 불러왔습니다.");
+    } catch (_err) {
+      showError("저장된 사실 카드를 불러오는 중 문제가 발생했습니다.");
+    }
+  });
+
   fillExampleBtn.addEventListener("click", () => {
     clearError();
     clearStatus();
@@ -182,6 +234,7 @@ document.addEventListener("DOMContentLoaded", () => {
     contactInput.value = "교수학습지원센터 (02-1234-5678)";
     recipientInput.value = "학부 재학생";
     toneInput.value = "공식적";
+    saveFactsToStorage();
   });
 
   form.addEventListener("submit", async (event) => {

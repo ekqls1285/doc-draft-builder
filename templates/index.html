@@ -4,20 +4,28 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>대학 행정 문서 초안 생성기</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📄</text></svg>">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
   <div class="container">
     <header class="page-header">
-      <h1>대학 행정 문서 초안 생성기</h1>
-      <p>문서 종류와 핵심 사실을 입력하면 Gemini AI가 업무 문서 초안을 만들어 줍니다.</p>
+      <div class="header-text">
+        <h1>대학 행정 문서 초안 생성기</h1>
+        <p>문서 종류와 핵심 사실을 입력하면 Gemini AI가 업무 문서 초안을 만들어 줍니다.</p>
+      </div>
+      <div class="header-logo-silhouette" aria-hidden="true" title="수원대학교 로고 실루엣"></div>
     </header>
 
     <main class="main-grid">
       <section class="panel input-panel">
         <div class="input-header">
           <h2>1. 문서 정보 입력</h2>
-          <button type="button" id="fill-example-btn" class="btn btn-secondary">예시 채우기</button>
+          <div class="input-actions">
+            <button type="button" id="save-facts-btn" class="btn btn-secondary">저장</button>
+            <button type="button" id="load-facts-btn" class="btn btn-secondary">불러오기</button>
+            <button type="button" id="fill-example-btn" class="btn btn-secondary">예시 채우기</button>
+          </div>
         </div>
 
         <form id="draft-form" novalidate>
@@ -103,6 +111,7 @@
       </section>
 
       <section class="panel output-panel">
+        <div class="watermark-silhouette" aria-hidden="true"></div>
         <div class="output-header">
           <h2>2. 생성된 초안</h2>
           <div class="output-actions">
