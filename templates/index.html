@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>대학 행정 문서 초안 생성기</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="container">
+    <header class="page-header">
+      <h1>대학 행정 문서 초안 생성기</h1>
+      <p>문서 종류와 핵심 사실을 입력하면 Gemini AI가 업무 문서 초안을 만들어 줍니다.</p>
+    </header>
+
+    <main class="main-grid">
+      <section class="panel input-panel">
+        <div class="input-header">
+          <h2>1. 문서 정보 입력</h2>
+          <button type="button" id="fill-example-btn" class="btn btn-secondary">예시 채우기</button>
+        </div>
+
+        <form id="draft-form" novalidate>
+          <div class="form-group">
+            <label for="doc_type">문서 종류 <span class="required">*</span></label>
+            <select id="doc_type" name="doc_type">
+              <option value="">-- 문서 종류를 선택하세요 --</option>
+              <option value="보도자료">보도자료</option>
+              <option value="안내문">안내문</option>
+              <option value="기안문">기안문</option>
+              <option value="결과 보고">결과 보고</option>
+              <option value="업무 메일">업무 메일</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="title">제목 <span class="required">*</span></label>
+            <input type="text" id="title" name="title" placeholder="예: 2026학년도 2학기 장학금 신청 안내">
+          </div>
+
+          <fieldset class="facts-card">
+            <legend>핵심 사실 카드 (5칸)</legend>
+
+            <div class="form-group">
+              <label for="when">일시</label>
+              <input type="text" id="when" name="when" placeholder="예: 2026년 11월 25일(수) 14:00 ~ 16:00">
+            </div>
+
+            <div class="form-group">
+              <label for="where">장소</label>
+              <input type="text" id="where" name="where" placeholder="예: 본관 2층 대회의실">
+            </div>
+
+            <div class="form-group">
+              <label for="who">대상</label>
+              <input type="text" id="who" name="who" placeholder="예: 학부 재학생 전체">
+            </div>
+
+            <div class="form-group">
+              <label for="how">신청 방법</label>
+              <input type="text" id="how" name="how" placeholder="예: 학교 포털 > 학생신청 메뉴에서 온라인 접수">
+            </div>
+
+            <div class="form-group">
+              <label for="contact">문의처</label>
+              <input type="text" id="contact" name="contact" placeholder="예: 학생지원팀 (02-1234-5678)">
+            </div>
+          </fieldset>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="recipient">받는 사람</label>
+              <input type="text" id="recipient" name="recipient" placeholder="예: 전체 학부생 / 각 단과대학 행정실">
+            </div>
+
+            <div class="form-group">
+              <label for="tone">어조</label>
+              <select id="tone" name="tone">
+                <option value="공식적">공식적</option>
+                <option value="친근한">친근한</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <span class="label-title">Prompt 선택</span>
+            <div class="radio-group">
+              <label class="radio-item">
+                <input type="radio" name="prompt_type" value="A" checked>
+                <span>Prompt A (입력 정보로 기본 작성)</span>
+              </label>
+              <label class="radio-item">
+                <input type="radio" name="prompt_type" value="B">
+                <span>Prompt B (행정 체크리스트 적용 + 없는 내용은 [확인 필요] 표시)</span>
+              </label>
+            </div>
+          </div>
+
+          <div id="error-message" class="error-box" hidden></div>
+
+          <button type="submit" id="generate-btn" class="btn btn-primary">초안 생성</button>
+        </form>
+      </section>
+
+      <section class="panel output-panel">
+        <div class="output-header">
+          <h2>2. 생성된 초안</h2>
+          <div class="output-actions">
+            <button type="button" id="toggle-edit-btn" class="btn btn-secondary" disabled>직접 수정</button>
+            <button type="button" id="copy-btn" class="btn btn-secondary" disabled>복사</button>
+            <button type="button" id="download-btn" class="btn btn-secondary" disabled>.md 다운로드</button>
+          </div>
+        </div>
+
+        <div id="loading-indicator" class="loading-box" hidden>생성 중...</div>
+        <div id="status-message" class="status-box" hidden></div>
+
+        <div id="draft-output" class="draft-preview empty-preview">
+          왼쪽에서 문서 정보를 입력하고 [초안 생성] 버튼을 누르면 여기에 초안이 나타납니다.
+        </div>
+        <textarea
+          id="draft-editor"
+          class="draft-editor"
+          rows="20"
+          placeholder="여기에 생성된 문서 초안을 직접 수정할 수 있습니다."
+          hidden
+        ></textarea>
+      </section>
+    </main>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/app.js') }}" defer></script>
+</body>
+</html>
