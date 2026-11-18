@@ -172,30 +172,36 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  function saveFactsToStorage() {
-    const facts = {
+  function saveFormToStorage() {
+    const selectedPrompt = document.querySelector('input[name="prompt_type"]:checked');
+    const formData = {
+      doc_type: docTypeInput.value,
+      title: titleInput.value,
       when: whenInput.value,
       where: whereInput.value,
       who: whoInput.value,
       how: howInput.value,
       contact: contactInput.value,
+      recipient: recipientInput.value,
+      tone: toneInput.value,
+      prompt_type: selectedPrompt ? selectedPrompt.value : "A",
     };
     try {
-      localStorage.setItem(FACTS_STORAGE_KEY, JSON.stringify(facts));
+      localStorage.setItem(FACTS_STORAGE_KEY, JSON.stringify(formData));
+      return true;
     } catch (_err) {
-      // 브라우저 저장소가 비활성화된 경우 조용히 무시합니다.
+      return false;
     }
-  }
-
-  for (const input of [whenInput, whereInput, whoInput, howInput, contactInput]) {
-    input.addEventListener("input", saveFactsToStorage);
   }
 
   saveFactsBtn.addEventListener("click", () => {
     clearError();
     clearStatus();
-    saveFactsToStorage();
-    showStatus("사실 카드가 브라우저에 저장되었습니다.");
+    if (saveFormToStorage()) {
+      showStatus("현재 입력된 문서 정보가 저장되었습니다.");
+    } else {
+      showError("브라우저 저장소에 저장할 수 없습니다.");
+    }
   });
 
   loadFactsBtn.addEventListener("click", () => {
@@ -205,19 +211,32 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const raw = localStorage.getItem(FACTS_STORAGE_KEY);
       if (!raw) {
-        showError("저장된 사실 카드가 아직 없습니다.");
+        showError("저장된 문서 정보가 아직 없습니다.");
         return;
       }
 
-      const facts = JSON.parse(raw);
-      whenInput.value = facts.when || "";
-      whereInput.value = facts.where || "";
-      whoInput.value = facts.who || "";
-      howInput.value = facts.how || "";
-      contactInput.value = facts.contact || "";
-      showStatus("저장된 사실 카드를 불러왔습니다.");
+      const formData = JSON.parse(raw);
+      docTypeInput.value = formData.doc_type || "";
+      titleInput.value = formData.title || "";
+      whenInput.value = formData.when || "";
+      whereInput.value = formData.where || "";
+      whoInput.value = formData.who || "";
+      howInput.value = formData.how || "";
+      contactInput.value = formData.contact || "";
+      recipientInput.value = formData.recipient || "";
+      toneInput.value = formData.tone || "공식적";
+
+      const targetPrompt = formData.prompt_type || "A";
+      const promptRadio = document.querySelector(
+        `input[name="prompt_type"][value="${targetPrompt}"]`
+      );
+      if (promptRadio) {
+        promptRadio.checked = true;
+      }
+
+      showStatus("저장된 문서 정보를 불러왔습니다.");
     } catch (_err) {
-      showError("저장된 사실 카드를 불러오는 중 문제가 발생했습니다.");
+      showError("저장된 문서 정보를 불러오는 중 문제가 발생했습니다.");
     }
   });
 
@@ -234,7 +253,6 @@ document.addEventListener("DOMContentLoaded", () => {
     contactInput.value = "교수학습지원센터 (02-1234-5678)";
     recipientInput.value = "학부 재학생";
     toneInput.value = "공식적";
-    saveFactsToStorage();
   });
 
   form.addEventListener("submit", async (event) => {
