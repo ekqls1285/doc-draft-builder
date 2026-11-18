@@ -306,6 +306,10 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
+        if (response.status === 401) {
+          window.location.href = "/login";
+          return;
+        }
         showError(data.error || "문서 초안을 생성하는 중 오류가 발생했습니다.");
         return;
       }
@@ -381,5 +385,100 @@ document.addEventListener("DOMContentLoaded", () => {
     URL.revokeObjectURL(url);
 
     showStatus(`'${safeTitle}.md' 파일로 다운로드했습니다.`);
+  });
+
+  // PWA 서비스 워커 등록 및 설치 팝업(Android Chrome / iOS Safari)
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("/sw.js").catch(() => {});
+  }
+
+  const pwaBanner = document.getElementById("pwa-install-banner");
+  const pwaInstallBtn = document.getElementById("pwa-install-btn");
+  const pwaLaterBtn = document.getElementById("pwa-later-btn");
+  const pwaIosGuide = document.getElementById("pwa-ios-guide");
+  const pwaBannerDesc = document.getElementById("pwa-banner-desc");
+
+  const PWA_DISMISS_KEY = "doc_draft_pwa_dismissed_until";
+  const DISMISS_DAYS = 7;
+
+  function isStandaloneMode() {
+    return (
+      window.matchMedia("(display-mode: standalone)").matches ||
+      window.navigator.standalone === true
+    );
+  }
+
+  function isDismissedRecently() {
+    try {
+      const until = Number(localStorage.getItem(PWA_DISMISS_KEY) || "0");
+      return Date.now() < until;
+    } catch (_err) {
+      return false;
+    }
+  }
+
+  function dismissPwaBanner() {
+    pwaBanner.hidden = true;
+    try {
+      const until = Date.now() + DISMISS_DAYS * 24 * 60 * 60 * 1000;
+      localStorage.setItem(PWA_DISMISS_KEY, String(until));
+    } catch (_err) {
+      // 저장소가 막혀 있어도 팝업은 닫습니다.
+    }
+  }
+
+  function isIosSafari() {
+    const ua = window.navigator.userAgent || "";
+    const isIos = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    const isSafari = /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS/.test(ua);
+    return isIos && isSafari;
+  }
+
+  let deferredInstallPrompt = null;
+
+  if (!isStandaloneMode() && !isDismissedRecently()) {
+    window.addEventListener("beforeinstallprompt", (event) => {
+      event.preventDefault();
+      deferredInstallPrompt = event;
+      pwaIosGuide.hidden = true;
+      pwaInstallBtn.textContent = "설치";
+      pwaBanner.hidden = false;
+    });
+
+    if (isIosSafari()) {
+      pwaBannerDesc.textContent = "Safari에서 홈 화면에 추가하면 앱처럼 쓸 수 있어요.";
+      pwaInstallBtn.textContent = "설치 방법";
+      pwaBanner.hidden = false;
+    }
+  }
+
+  pwaLaterBtn.addEventListener("click", dismissPwaBanner);
+
+  pwaInstallBtn.addEventListener("click", async () => {
+    if (deferredInstallPrompt) {
+      deferredInstallPrompt.prompt();
+      const choice = await deferredInstallPrompt.userChoice;
+      deferredInstallPrompt = null;
+      if (choice && choice.outcome === "accepted") {
+        pwaBanner.hidden = true;
+      } else {
+        dismissPwaBanner();
+      }
+      return;
+    }
+
+    if (isIosSafari()) {
+      const isGuideHidden = pwaIosGuide.hidden;
+      pwaIosGuide.hidden = !isGuideHidden;
+      pwaInstallBtn.textContent = isGuideHidden ? "확인" : "설치 방법";
+      if (!isGuideHidden) {
+        dismissPwaBanner();
+      }
+    }
+  });
+
+  window.addEventListener("appinstalled", () => {
+    pwaBanner.hidden = true;
+    deferredInstallPrompt = null;
   });
 });

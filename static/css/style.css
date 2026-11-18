@@ -39,6 +39,22 @@ body {
   flex: 1;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+}
+
+.logout-form {
+  margin: 0;
+}
+
+.logout-btn {
+  padding: 7px 12px;
+  font-size: 0.82rem;
+}
+
 .header-logo-silhouette {
   width: 58px;
   height: 76px;
@@ -421,5 +437,119 @@ textarea:focus {
 
   .form-row {
     grid-template-columns: 1fr;
+  }
+}
+
+.login-body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.login-wrapper {
+  width: 100%;
+  max-width: 460px;
+}
+
+.login-card {
+  padding: 28px;
+}
+
+.login-brand {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #efe7dc;
+}
+
+.login-brand h1 {
+  margin: 0 0 4px;
+  font-size: 1.35rem;
+  color: #2f241c;
+}
+
+.login-brand p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #756354;
+}
+
+.pwa-banner {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 50;
+  width: calc(100% - 32px);
+  max-width: 360px;
+  padding: 16px;
+  background-color: #fffdf9;
+  border: 1px solid #dfd1bf;
+  border-top: 4px solid #9c6b3b;
+  border-radius: 14px;
+  box-shadow: 0 12px 30px rgba(59, 47, 38, 0.16);
+}
+
+.pwa-banner-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.pwa-banner-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 10px;
+  border: 1px solid #e6dccf;
+  flex-shrink: 0;
+}
+
+.pwa-banner-text strong {
+  display: block;
+  font-size: 0.96rem;
+  color: #2f241c;
+  margin-bottom: 2px;
+}
+
+.pwa-banner-text p {
+  margin: 0;
+  font-size: 0.83rem;
+  color: #756354;
+  line-height: 1.4;
+}
+
+.pwa-ios-guide {
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border-radius: 9px;
+  background-color: #faf5ec;
+  border: 1px solid #e2d4c1;
+  font-size: 0.83rem;
+  color: #4a3b2f;
+  line-height: 1.5;
+}
+
+.pwa-banner-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.pwa-install-btn {
+  width: auto;
+  margin-top: 0;
+  padding: 8px 16px;
+  font-size: 0.85rem;
+}
+
+@media (max-width: 540px) {
+  .pwa-banner {
+    right: 16px;
+    left: 16px;
+    bottom: 16px;
+    max-width: none;
   }
 }

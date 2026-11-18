@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#9c6b3b">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="문서초안">
+  <title>접속 비밀번호 확인 - 대학 행정 문서 초안 생성기</title>
+  <link rel="icon" href="{{ url_for('static', filename='images/icon-192.png') }}">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/apple-touch-icon.png') }}">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="login-body">
+  <div class="login-wrapper">
+    <section class="panel login-card">
+      <div class="login-brand">
+        <div class="header-logo-silhouette" aria-hidden="true"></div>
+        <div>
+          <h1>대학 행정 문서 초안 생성기</h1>
+          <p>서비스를 이용하려면 접속 비밀번호를 입력해 주세요.</p>
+        </div>
+      </div>
+
+      {% if error %}
+      <div class="error-box">{{ error }}</div>
+      {% endif %}
+
+      <form method="POST" action="/login" class="login-form">
+        <div class="form-group">
+          <label for="password">접속 비밀번호 <span class="required">*</span></label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            minlength="8"
+            placeholder="8자리 이상 비밀번호를 입력하세요"
+            required
+            autofocus
+          >
+        </div>
+        <button type="submit" class="btn btn-primary" {% if config_error %}disabled{% endif %}>
+          확인하고 들어가기
+        </button>
+      </form>
+    </section>
+  </div>
+</body>
+</html>

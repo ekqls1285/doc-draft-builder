@@ -1,14 +1,48 @@
+import hashlib
+import hmac
 import os
 from dotenv import load_dotenv
-from flask import Flask, jsonify, render_template, request
+from flask import (
+    Flask,
+    jsonify,
+    make_response,
+    redirect,
+    render_template,
+    request,
+    send_from_directory,
+    session,
+    url_for,
+)
 from google import genai
 
-# .env 파일에 적어둔 환경변수(GEMINI_API_KEY)를 불러옵니다.
+# .env 파일에 적어둔 환경변수(GEMINI_API_KEY, APP_PASSWORD)를 불러옵니다.
 load_dotenv()
 
 app = Flask(__name__)
 
 MODEL_NAME = "gemini-3.5-flash-lite"
+
+
+def get_app_password() -> str:
+    return (os.getenv("APP_PASSWORD") or "").strip()
+
+
+def is_password_configured() -> bool:
+    return len(get_app_password()) >= 8
+
+
+def configure_secret_key() -> str:
+    explicit_secret = (os.getenv("FLASK_SECRET_KEY") or "").strip()
+    if explicit_secret:
+        return explicit_secret
+    # Vercel 등 서버리스 환경에서도 세션 쿠키가 유지되도록 고정 해시를 사용합니다.
+    seed = f"doc-draft-builder:{get_app_password()}"
+    return hashlib.sha256(seed.encode("utf-8")).hexdigest()
+
+
+app.secret_key = configure_secret_key()
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 
 
 def build_prompt(data: dict) -> str:
@@ -59,16 +93,90 @@ def build_prompt(data: dict) -> str:
 
 @app.route("/", methods=["GET"])
 def index():
+    if not is_password_configured() or not session.get("authenticated"):
+        return redirect(url_for("login"))
     return render_template("index.html")
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if not is_password_configured():
+        return (
+            render_template(
+                "login.html",
+                error="서버 설정 오류: .env(또는 Vercel 환경변수)에 8자리 이상의 APP_PASSWORD를 설정해 주세요.",
+                config_error=True,
+            ),
+            500,
+        )
+
+    if session.get("authenticated"):
+        return redirect(url_for("index"))
+
+    error = None
+    if request.method == "POST":
+        submitted = (request.form.get("password") or "").strip()
+        if len(submitted) < 8:
+            error = "비밀번호는 8자리 이상 입력해 주세요."
+        elif hmac.compare_digest(submitted, get_app_password()):
+            session["authenticated"] = True
+            return redirect(url_for("index"))
+        else:
+            error = "비밀번호가 올바르지 않습니다. 다시 확인해 주세요."
+
+    return render_template("login.html", error=error, config_error=False)
+
+
+@app.route("/logout", methods=["POST"])
+def logout():
+    session.clear()
+    return redirect(url_for("login"))
+
+
+@app.route("/manifest.json", methods=["GET"])
+def manifest():
+    return send_from_directory(
+        os.path.join(app.root_path, "static"),
+        "manifest.json",
+        mimetype="application/manifest+json",
+    )
+
+
+@app.route("/sw.js", methods=["GET"])
+def service_worker():
+    response = make_response(
+        send_from_directory(
+            os.path.join(app.root_path, "static", "js"),
+            "sw.js",
+            mimetype="application/javascript",
+        )
+    )
+    response.headers["Service-Worker-Allowed"] = "/"
+    response.headers["Cache-Control"] = "no-cache"
+    return response
 
 
 @app.route("/favicon.ico", methods=["GET"])
 def favicon():
-    return ("", 204)
+    return send_from_directory(
+        os.path.join(app.root_path, "static", "images"),
+        "icon-192.png",
+        mimetype="image/png",
+    )
 
 
 @app.route("/generate", methods=["POST"])
 def generate():
+    if not is_password_configured() or not session.get("authenticated"):
+        return (
+            jsonify(
+                {
+                    "error": "접속 비밀번호 인증이 필요합니다. 페이지를 새로고침해 로그인해 주세요."
+                }
+            ),
+            401,
+        )
+
     data = request.get_json(silent=True) or {}
 
     doc_type = (data.get("doc_type") or "").strip()
